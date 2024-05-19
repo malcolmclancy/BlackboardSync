@@ -15,7 +15,7 @@ jobs:
       runs-on: ${{ matrix.os }}
       strategy:
         matrix:
-          os: [macos-latest, windows-latest]
+          os: [windows-latest]
       steps:
         - name: Checkout repository
           uses: actions/checkout@v3
@@ -33,13 +33,7 @@ jobs:
             pip install -r requirements.txt
             python packaging/pyinst.py
         # Signing
-  
-        - name: Import macOS certificate
-          if: matrix.os == 'macos-latest'
-          uses: apple-actions/import-codesign-certs@v2
-          with:
-            p12-file-base64: ${{ secrets.BB_P12 }}
-            p12-password: ${{ secrets.BB_P12_PASSWORD }}
+
   
         # Package Application
   
@@ -50,11 +44,6 @@ jobs:
             script-file: packaging/pkg_win.nsi
             arguments: "/V3 /DVERSION=${{github.ref_name}}"
   
-        - name: Sign and Package into DMG
-          if: matrix.os == 'macos-latest'
-          run: |
-            chmod +x packaging/pkg_macos.sh
-            packaging/pkg_macos.sh "blackboard_sync-$GITHUB_REF_NAME"
         # Save Packages
         - name: Extract release notes
           id: extract-release-notes
