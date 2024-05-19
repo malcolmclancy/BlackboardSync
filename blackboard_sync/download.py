@@ -21,6 +21,7 @@ mass download all user content from Blackboard
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import os
 import logging
 import platform
 from requests.exceptions import RequestException
@@ -205,8 +206,24 @@ class BlackboardDownload:
                 download_path = Path(file_path / safe_title)
                 self.executor.submit(self._download_webdav_file, body_link.href, download_path)
 
-            with Path(file_path, f"{content.title_path_safe}.html").open('w', encoding='utf-8') as html_content:
-                html_content.write(parser.body)
+            write_path = Path(file_path, f"{content.title_path_safe}.html")
+            if len(content.title_path_safe) > 40 and platform.system() == 'Windows':
+                print(f"Running on Windows and Title over 40 characters")
+                print(f"Title was {content.title_path_safe}.html renaming")
+                counter = 0
+                shortname = content.title_path_safe.split(".")[0][:8]
+                filename = "{}.html"
+                while os.path.isfile(shortname + filename.format(counter)):
+                    counter += 1
+                newName = shortname +  filename.format(counter)
+                write_path = Path(file_path, f"{newName}")
+                print(f"Title is Now {newName}")
+            
+            try:
+                with write_path.open('w', encoding='utf-8') as html_content:
+                    html_content.write(parser.body)
+            except:
+                print("Can't download")
 
     def download(self) -> Optional[datetime]:
         """Retrieve the user's courses, and start download of all contents
